@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NephroTrack — App Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --teal:#0891b2;--teal-d:#0e7490;--teal-l:#22d3ee;--teal-pale:#e0f7fa;
+  --mint:#10b981;--mint-l:#6ee7b7;--mint-pale:#ccfbf1;--mint-d:#059669;
+  --navy:#0b2540;--navy-m:#154060;
+  --coral:#f43f5e;--amber:#f59e0b;--violet:#8b5cf6;
+  --red-pale:#ffe4e6;--amber-pale:#fef3de;--violet-pale:#f0ebf8;
+  --bg:#f2f8fb;--card:#fff;
+  --g50:#f8fbfd;--g100:#e4eef4;--g200:#ccdde8;--g400:#8aafc2;--g600:#4d7a93;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Nunito',sans-serif;
+  background:linear-gradient(135deg,#0b2540 0%,#0e4a6b 50%,#075e7a 100%);
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:32px 16px;
+}
+.demo-wrap{display:flex;flex-direction:column;align-items:center;gap:20px;}
+.demo-label{font-family:'Instrument Serif',serif;font-size:1.6rem;color:rgba(255,255,255,.9);text-align:center;}
+.demo-label span{color:var(--teal-l);font-style:italic;}
+.demo-sub{font-size:.78rem;color:rgba(255,255,255,.38);text-align:center;}
+
+/* ── PHONE SHELL ── */
+.phone-shell{
+  width:390px;height:820px;background:#0d1b2a;border-radius:52px;padding:14px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.08),0 60px 120px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.04);
+  position:relative;flex-shrink:0;
+}
+.phone-shell::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:30px;background:#0d1b2a;border-radius:0 0 22px 22px;z-index:20;}
+.phone-shell::after{content:'';position:absolute;top:10px;left:50%;transform:translateX(-50%);width:60px;height:6px;background:#1a2f42;border-radius:3px;z-index:21;}
+.cam{position:absolute;top:14px;right:calc(50% - 44px);width:10px;height:10px;border-radius:50%;background:#111d28;border:1px solid #1e3347;z-index:21;}
+
+/* ── SCREEN AREA ── */
+.screen-area{width:100%;height:100%;border-radius:40px;overflow:hidden;background:var(--bg);position:relative;}
+
+/* STATUS BAR */
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px 6px;font-size:.68rem;font-weight:800;position:absolute;top:0;left:0;right:0;z-index:10;pointer-events:none;color:#fff;}
+.sb-right{display:flex;gap:5px;align-items:center;font-size:.6rem;}
+
+/* ── ALL SCREENS ── */
+.screens{position:absolute;top:0;left:0;right:0;bottom:0;}
+.screen{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  overflow-y:auto;overflow-x:hidden;scrollbar-width:none;
+  opacity:0;pointer-events:none;
+  transform:translateX(30px);
+  transition:opacity .25s ease,transform .25s ease;
+  padding-top:38px;padding-bottom:72px;
+}
+.screen::-webkit-scrollbar{display:none;}
+.screen.active{opacity:1;pointer-events:all;transform:translateX(0);}
+/* sub-screens that slide in from right */
+.screen.sub{padding-bottom:20px;}
+.screen.sub.active{transform:translateX(0);}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{
+  position:absolute;bottom:0;left:0;right:0;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(12px);
+  border-top:1px solid var(--g100);display:flex;z-index:15;
+  padding:6px 0 10px;border-radius:0 0 40px 40px;
+}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 2px;transition:transform .2s;}
+.nav-item:active{transform:scale(.88);}
+.nav-icon{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:background .2s,transform .2s;}
+.nav-item.active .nav-icon{background:var(--teal-pale);transform:scale(1.05);}
+.nav-label{font-size:.5rem;font-weight:700;color:var(--g400);}
+.nav-item.active .nav-label{color:var(--teal);}
+
+/* ── BACK HEADER ── */
+.back-header{
+  display:flex;align-items:center;gap:10px;
+  padding:44px 20px 16px;
+  background:var(--navy);
+}
+.back-btn{
+  width:34px;height:34px;border-radius:11px;
+  background:rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;cursor:pointer;flex-shrink:0;color:#fff;
+}
+.bh-title{font-size:1rem;font-weight:800;color:#fff;}
+.bh-sub{font-size:.62rem;color:rgba(255,255,255,.4);margin-top:2px;}
+
+/* ── COMMON FORM STYLES ── */
+.form-section{padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+.form-label{font-size:.7rem;font-weight:800;color:var(--navy);margin-bottom:4px;}
+.form-input{
+  background:var(--card);border:1.5px solid var(--g100);border-radius:12px;
+  padding:12px 14px;font-family:'Nunito',sans-serif;font-size:.85rem;color:var(--navy);
+  width:100%;outline:none;transition:border-color .2s;
+}
+.form-input:focus{border-color:var(--teal);}
+.form-group{display:flex;flex-direction:column;gap:4px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-save-btn{
+  background:linear-gradient(135deg,var(--teal),var(--mint));
+  color:#fff;border:none;border-radius:14px;padding:14px;
+  font-family:'Nunito',sans-serif;font-size:.88rem;font-weight:800;
+  cursor:pointer;margin:0 20px 20px;
+}
+
+/* ── NUTRIENT LIMIT ROW ── */
+.nl-setting-row{
+  background:var(--card);border-radius:14px;padding:14px 16px;
+  display:flex;align-items:center;gap:12px;margin-bottom:0;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+.nlsr-ico{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.nlsr-info{flex:1;}
+.nlsr-name{font-size:.75rem;font-weight:800;color:var(--navy);}
+.nlsr-current{font-size:.6rem;color:var(--g400);margin-top:2px;}
+.nlsr-input{
+  width:70px;border:1.5px solid var(--g100);border-radius:10px;
+  padding:7px 10px;font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:700;
+  color:var(--navy);text-align:right;outline:none;background:var(--g50);
+}
+.nlsr-unit{font-size:.62rem;color:var(--g400);margin-left:4px;}
+
+/* ── MED CARD ── */
+.med-card{
+  background:var(--card);border-radius:14px;padding:14px 16px;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+.mc-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.mc-ico{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:var(--amber-pale);}
+.mc-name{font-size:.8rem;font-weight:800;color:var(--navy);}
+.mc-dosage{font-size:.65rem;color:var(--g600);margin-top:2px;}
+.mc-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.mc-tag{font-size:.55rem;font-weight:700;padding:3px 9px;border-radius:100px;}
+.add-item-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  background:transparent;border:2px dashed var(--g200);
+  border-radius:14px;padding:13px;cursor:pointer;
+  font-family:'Nunito',sans-serif;font-size:.78rem;font-weight:700;color:var(--g400);
+}
+
+/* ═══ LOGIN SCREEN ═══ */
+#s-login{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-m) 60%,#0d5a7a 100%);padding-bottom:0;}
+.login-body{display:flex;flex-direction:column;align-items:center;padding:60px 28px 32px;}
+.login-logo{
+  width:68px;height:68px;border-radius:22px;
+  background:linear-gradient(135deg,var(--teal),var(--mint));
+  display:flex;align-items:center;justify-content:center;font-size:2rem;
+  box-shadow:0 8px 28px rgba(8,145,178,.4);margin-bottom:20px;
+}
+.login-title{font-family:'Instrument Serif',serif;font-size:1.8rem;color:#fff;margin-bottom:6px;text-align:center;}
+.login-title span{color:var(--teal-l);font-style:italic;}
+.login-sub{font-size:.75rem;color:rgba(255,255,255,.45);text-align:center;margin-bottom:36px;line-height:1.6;}
+.login-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:24px 22px;width:100%;}
+.login-field-label{font-size:.68rem;font-weight:800;color:rgba(255,255,255,.5);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em;}
+.phone-input-wrap{display:flex;gap:10px;margin-bottom:20px;}
+.country-code{
+  background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.15);
+  border-radius:12px;padding:12px 14px;color:#fff;
+  font-family:'Nunito',sans-serif;font-size:.85rem;font-weight:700;
+  min-width:70px;text-align:center;
+}
+.phone-field{
+  flex:1;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.15);
+  border-radius:12px;padding:12px 14px;color:#fff;
+  font-family:'Nunito',sans-serif;font-size:.88rem;outline:none;
+}
+.phone-field::placeholder{color:rgba(255,255,255,.3);}
+.send-otp-btn{
+  width:100%;background:linear-gradient(135deg,var(--teal-l),var(--mint));
+  border:none;border-radius:14px;padding:15px;
+  font-family:'Nunito',sans-serif;font-size:.92rem;font-weight:800;color:#fff;
+  cursor:pointer;box-shadow:0 4px 18px rgba(8,145,178,.3);
+  transition:transform .2s,box-shadow .2s;
+}
+.send-otp-btn:active{transform:scale(.97);}
+.login-footer{font-size:.65rem;color:rgba(255,255,255,.3);text-align:center;margin-top:18px;line-height:1.6;}
+
+/* ═══ OTP SCREEN ═══ */
+#s-otp{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-m) 60%,#0d5a7a 100%);padding-bottom:0;}
+.otp-body{display:flex;flex-direction:column;align-items:center;padding:60px 28px 32px;}
+.otp-back{
+  align-self:flex-start;display:flex;align-items:center;gap:6px;
+  color:rgba(255,255,255,.5);font-size:.72rem;font-weight:700;cursor:pointer;margin-bottom:36px;
+}
+.otp-icon-wrap{width:68px;height:68px;border-radius:22px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:20px;}
+.otp-title{font-family:'Instrument Serif',serif;font-size:1.6rem;color:#fff;text-align:center;margin-bottom:8px;}
+.otp-sub{font-size:.75rem;color:rgba(255,255,255,.45);text-align:center;margin-bottom:36px;line-height:1.6;}
+.otp-sub strong{color:rgba(255,255,255,.75);}
+.otp-boxes{display:flex;gap:12px;justify-content:center;margin-bottom:24px;}
+.otp-box{
+  width:52px;height:58px;
+  background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);
+  border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;font-weight:900;color:#fff;
+  transition:border-color .2s,background .2s;
+}
+.otp-box.filled{background:rgba(8,145,178,.25);border-color:var(--teal-l);}
+.otp-box.active-box{border-color:#fff;background:rgba(255,255,255,.15);}
+.verify-btn{
+  width:100%;background:linear-gradient(135deg,var(--teal-l),var(--mint));
+  border:none;border-radius:14px;padding:15px;
+  font-family:'Nunito',sans-serif;font-size:.92rem;font-weight:800;color:#fff;
+  cursor:pointer;box-shadow:0 4px 18px rgba(8,145,178,.3);
+  transition:transform .2s;
+}
+.verify-btn:active{transform:scale(.97);}
+.resend-row{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:18px;}
+.resend-text{font-size:.7rem;color:rgba(255,255,255,.35);}
+.resend-link{font-size:.7rem;font-weight:800;color:var(--teal-l);cursor:pointer;}
+.otp-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:24px;width:100%;}
+.kp-btn{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);
+  border-radius:14px;padding:14px;
+  font-family:'Nunito',sans-serif;font-size:1.1rem;font-weight:800;color:#fff;
+  cursor:pointer;text-align:center;transition:background .15s;
+}
+.kp-btn:active{background:rgba(255,255,255,.18);}
+
+/* ═══ HOME SCREEN ═══ */
+#s-home{background:var(--bg);}
+.home-header{background:linear-gradient(150deg,var(--navy),var(--navy-m));padding:44px 20px 28px;border-radius:0 0 32px 32px;margin-bottom:16px;position:relative;overflow:hidden;}
+.home-header::after{content:'';position:absolute;top:-60px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(34,211,238,.12),transparent 70%);}
+.hh-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.hh-left .greet{font-size:.72rem;color:rgba(255,255,255,.45);}
+.hh-left .uname{font-size:1.1rem;font-weight:800;color:#fff;}
+.hh-left .meta{font-size:.6rem;color:rgba(255,255,255,.4);margin-top:3px;}
+.notif-btn{width:36px;height:36px;border-radius:12px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:1rem;position:relative;cursor:pointer;}
+.n-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--coral);border:2px solid var(--navy);}
+.dial-card{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px;}
+.dc-ico{width:34px;height:34px;border-radius:10px;background:rgba(16,185,129,.2);display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.dc-top{font-size:.6rem;color:rgba(255,255,255,.45);}
+.dc-val{font-size:.82rem;font-weight:700;color:#fff;}
+.dc-badge{margin-left:auto;background:rgba(16,185,129,.25);color:var(--mint-l);padding:4px 10px;border-radius:100px;font-size:.58rem;font-weight:800;}
+.section-hdr{display:flex;justify-content:space-between;align-items:center;padding:0 20px;margin-bottom:10px;}
+.sh-title{font-size:.78rem;font-weight:800;color:var(--navy);}
+.sh-link{font-size:.65rem;font-weight:700;color:var(--teal);cursor:pointer;}
+.nut-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px;}
+.nut-card{background:var(--card);border-radius:16px;padding:12px 14px;box-shadow:0 2px 12px rgba(0,0,0,.06);}
+.nc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.nc-ico{font-size:1rem;}
+.nc-pct{font-size:.68rem;font-weight:800;}
+.nc-name{font-size:.62rem;color:var(--g600);margin-bottom:3px;}
+.nc-val{font-size:.85rem;font-weight:800;color:var(--navy);}
+.nc-bar{height:4px;border-radius:2px;background:var(--g100);overflow:hidden;margin-top:8px;}
+.nc-fill{height:100%;border-radius:2px;}
+.quick-log-btn{margin:14px 20px 0;background:linear-gradient(135deg,var(--teal),var(--mint));border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 4px 18px rgba(8,145,178,.3);}
+.qlb-ico{font-size:1.3rem;}
+.qlb-t1{font-size:.78rem;font-weight:800;color:#fff;}
+.qlb-t2{font-size:.62rem;color:rgba(255,255,255,.7);}
+.qlb-arr{margin-left:auto;font-size:1.1rem;color:#fff;}
+.upcoming-card{margin:14px 20px 0;background:var(--card);border-radius:16px;padding:14px 16px;box-shadow:0 2px 12px rgba(0,0,0,.06);}
+.uc-title{font-size:.72rem;font-weight:800;color:var(--navy);margin-bottom:10px;}
+.uc-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--g100);}
+.uc-row:last-child{border-bottom:none;}
+.uc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.uc-meal{font-size:.68rem;font-weight:700;color:var(--navy);}
+.uc-time{font-size:.6rem;color:var(--g400);}
+.uc-cal{font-size:.65rem;font-weight:700;color:var(--teal);}
+
+/* ═══ NUTRIENTS SCREEN ═══ */
+#s-nutrients{background:var(--bg);}
+.nt-header{background:var(--navy);padding:44px 20px 20px;border-radius:0 0 28px 28px;margin-bottom:14px;}
+.nt-title{font-size:1.1rem;font-weight:800;color:#fff;}
+.nt-date{font-size:.65rem;color:rgba(255,255,255,.4);}
+.nt-ring-row{display:flex;align-items:center;gap:16px;margin-top:14px;}
+.ring-wrap{position:relative;width:80px;height:80px;flex-shrink:0;}
+.ring-wrap svg{transform:rotate(-90deg);}
+.ring-ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ring-pct{font-size:.85rem;font-weight:900;color:#fff;}
+.ring-lbl{font-size:.5rem;color:rgba(255,255,255,.4);}
+.nt-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.chip{padding:4px 10px;border-radius:100px;font-size:.58rem;font-weight:800;}
+.chip-g{background:rgba(16,185,129,.2);color:var(--mint-l);}
+.chip-w{background:rgba(245,158,11,.2);color:#fbbf24;}
+.chip-r{background:rgba(244,63,94,.2);color:#fb7185;}
+.nut-list{display:flex;flex-direction:column;gap:10px;padding:0 20px;}
+.nl-card{background:var(--card);border-radius:16px;padding:14px 16px;box-shadow:0 2px 12px rgba(0,0,0,.05);}
+.nl-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.nl-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.nl-name{font-size:.78rem;font-weight:800;color:var(--navy);}
+.nl-target{font-size:.6rem;color:var(--g400);}
+.nl-status{padding:4px 10px;border-radius:100px;font-size:.58rem;font-weight:800;margin-left:auto;}
+.nl-bar-bg{height:6px;background:var(--g100);border-radius:3px;overflow:hidden;}
+.nl-bar-fill{height:100%;border-radius:3px;}
+.nl-footer{display:flex;justify-content:space-between;margin-top:8px;}
+.nl-consumed{font-size:.6rem;color:var(--g600);}
+.nl-remaining{font-size:.6rem;font-weight:700;}
+
+/* ═══ MEAL PLAN SCREEN ═══ */
+#s-meals{background:var(--bg);}
+.mp-header{background:var(--navy);padding:44px 20px 16px;border-radius:0 0 28px 28px;margin-bottom:14px;}
+.mp-title{font-size:1.1rem;font-weight:800;color:#fff;}
+.mp-sub{font-size:.62rem;color:rgba(255,255,255,.4);margin-top:2px;}
+.week-strip{display:flex;gap:6px;padding:0 20px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;}
+.week-strip::-webkit-scrollbar{display:none;}
+.day-btn{display:flex;flex-direction:column;align-items:center;min-width:40px;padding:8px 6px;border-radius:14px;font-size:.56rem;font-weight:700;color:var(--g400);cursor:pointer;border:none;background:transparent;}
+.day-btn.active{background:var(--teal);color:#fff;}
+.day-btn .d-num{font-size:.82rem;font-weight:900;margin-top:2px;}
+.meal-block{margin:0 20px 12px;background:var(--card);border-radius:18px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.05);}
+.mb-head{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--g50);border-bottom:1px solid var(--g100);}
+.mb-head-ico{font-size:1.1rem;}
+.mb-head-title{font-size:.75rem;font-weight:800;color:var(--navy);}
+.mb-head-time{font-size:.6rem;color:var(--g400);margin-left:auto;}
+.mb-head-kcal{font-size:.62rem;font-weight:700;color:var(--teal);}
+.mb-items{padding:10px 14px 12px;display:flex;flex-direction:column;gap:8px;}
+.mb-item{display:flex;align-items:center;justify-content:space-between;}
+.mbi-name{font-size:.68rem;color:var(--navy);}
+.mbi-tags{display:flex;gap:4px;}
+.tag{font-size:.5rem;font-weight:800;padding:2px 7px;border-radius:100px;}
+.tag-ok{background:var(--mint-pale);color:var(--mint-d);}
+.tag-k{background:var(--amber-pale);color:#92550a;}
+.tag-p{background:var(--red-pale);color:#9f1239;}
+.tag-na{background:var(--violet-pale);color:#5b21b6;}
+
+/* ═══ HEALTH METRICS ═══ */
+#s-health{background:var(--bg);}
+.hm-header{background:var(--navy);padding:44px 20px 20px;border-radius:0 0 28px 28px;margin-bottom:14px;}
+.hm-title{font-size:1.1rem;font-weight:800;color:#fff;}
+.hm-sub{font-size:.62rem;color:rgba(255,255,255,.4);margin-top:2px;}
+.hm-big{margin:0 20px 12px;background:linear-gradient(135deg,var(--teal-d),var(--teal));border-radius:20px;padding:18px;display:flex;align-items:center;gap:16px;}
+.hmb-ico{font-size:2rem;}
+.hmb-val{font-size:1.8rem;font-weight:900;color:#fff;line-height:1;}
+.hmb-unit{font-size:.65rem;color:rgba(255,255,255,.6);}
+.hmb-label{font-size:.62rem;color:rgba(255,255,255,.6);margin-top:4px;}
+.hmb-trend{margin-left:auto;background:rgba(255,255,255,.15);color:#fff;padding:6px 12px;border-radius:100px;font-size:.65rem;font-weight:800;}
+.metrics-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 20px 12px;}
+.metric-card{background:var(--card);border-radius:16px;padding:14px;box-shadow:0 2px 12px rgba(0,0,0,.05);}
+.mc-ico{font-size:1.2rem;margin-bottom:6px;}
+.mc-val{font-size:1.1rem;font-weight:900;color:var(--navy);line-height:1;}
+.mc-u{font-size:.56rem;color:var(--g400);}
+.mc-label{font-size:.6rem;color:var(--g600);margin-top:3px;}
+.mc-trend{font-size:.58rem;font-weight:800;margin-top:5px;}
+.t-dn{color:var(--mint);}
+.t-up{color:var(--coral);}
+.session-log{margin:0 20px 12px;background:var(--card);border-radius:18px;padding:14px 16px;box-shadow:0 2px 12px rgba(0,0,0,.05);}
+.sl-title{font-size:.75rem;font-weight:800;color:var(--navy);margin-bottom:12px;display:flex;justify-content:space-between;}
+.sl-title span{font-size:.62rem;font-weight:700;color:var(--teal);}
+.sl-row{display:flex;align-items:center;padding:8px 0;border-bottom:1px dashed var(--g100);}
+.sl-row:last-child{border-bottom:none;}
+.sl-date{font-size:.65rem;color:var(--navy);flex:1;}
+.sl-wt{font-size:.7rem;font-weight:800;color:var(--navy);min-width:60px;}
+.sl-uf{font-size:.62rem;color:var(--g600);min-width:50px;}
+.sl-badge{font-size:.52rem;font-weight:800;padding:3px 8px;border-radius:100px;}
+.trend-chart{margin:0 20px 12px;background:var(--card);border-radius:18px;padding:14px 16px;box-shadow:0 2px 12px rgba(0,0,0,.05);}
+.tc-title{font-size:.75rem;font-weight:800;color:var(--navy);margin-bottom:12px;}
+.bars{display:flex;align-items:flex-end;gap:8px;height:70px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.bar-fill{width:100%;border-radius:6px 6px 0 0;background:var(--teal-pale);}
+.bar-fill.hl{background:var(--teal);}
+.bar-label{font-size:.48rem;color:var(--g400);}
+
+/* ═══ GAMIFICATION ═══ */
+#s-game{background:var(--navy);}
+.gm-header{padding:44px 20px 16px;}
+.gm-title{font-size:1.1rem;font-weight:800;color:#fff;}
+.gm-sub{font-size:.62rem;color:rgba(255,255,255,.35);margin-top:2px;}
+.streak-card{margin:0 20px 14px;background:linear-gradient(135deg,#f59e0b,#f97316);border-radius:20px;padding:18px;display:flex;align-items:center;gap:16px;}
+.sc-num{font-size:2.4rem;font-weight:900;color:#fff;line-height:1;}
+.sc-label{font-size:.65rem;color:rgba(255,255,255,.7);}
+.sc-best{font-size:.58rem;color:rgba(255,255,255,.5);margin-top:3px;}
+.sc-right{margin-left:auto;font-size:2.2rem;}
+.badges-section{padding:0 20px 14px;}
+.bs-title{font-size:.65rem;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;}
+.badges-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.badge{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:10px 6px;text-align:center;}
+.badge.earned{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.3);}
+.badge-ic{font-size:1.4rem;margin-bottom:4px;}
+.badge-nm{font-size:.48rem;color:rgba(255,255,255,.4);line-height:1.3;}
+.badge.earned .badge-nm{color:var(--mint-l);}
+.weekly-goals{margin:0 20px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:16px;}
+.wg-title{font-size:.75rem;font-weight:800;color:#fff;margin-bottom:12px;}
+.wg-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.wg-row:last-child{margin-bottom:0;}
+.wg-label{font-size:.62rem;color:rgba(255,255,255,.5);width:90px;flex-shrink:0;}
+.wg-bar-bg{flex:1;height:7px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;}
+.wg-bar-fill{height:100%;border-radius:4px;}
+.wg-pts{font-size:.6rem;font-weight:800;color:rgba(255,255,255,.5);width:32px;text-align:right;}
+
+/* ═══ FOOD LOG ═══ */
+#s-foodlog{background:var(--bg);}
+.fl-header{background:var(--navy);padding:44px 20px 20px;border-radius:0 0 28px 28px;margin-bottom:14px;}
+.fl-title{font-size:1.1rem;font-weight:800;color:#fff;}
+.fl-sub{font-size:.62rem;color:rgba(255,255,255,.4);margin-top:2px;}
+.fl-search{margin:0 20px 14px;background:var(--card);border-radius:14px;display:flex;align-items:center;gap:10px;padding:12px 14px;box-shadow:0 2px 12px rgba(0,0,0,.06);}
+.fl-search-ico{font-size:1rem;color:var(--g400);}
+.fl-search-input{border:none;outline:none;background:transparent;font-family:'Nunito',sans-serif;font-size:.78rem;color:var(--navy);width:100%;}
+.fl-search-input::placeholder{color:var(--g400);}
+.meal-type-tabs{display:flex;gap:8px;padding:0 20px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;}
+.meal-type-tabs::-webkit-scrollbar{display:none;}
+.mt-tab{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:100px;font-size:.65rem;font-weight:800;cursor:pointer;white-space:nowrap;background:var(--card);color:var(--g600);border:none;font-family:'Nunito',sans-serif;}
+.mt-tab.active{background:var(--teal);color:#fff;}
+.logged-items{padding:0 20px;display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.li-section-title{font-size:.72rem;font-weight:800;color:var(--navy);margin-bottom:8px;}
+.log-item{background:var(--card);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+.li-ico{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.li-name{font-size:.72rem;font-weight:700;color:var(--navy);}
+.li-macros{display:flex;gap:8px;margin-top:3px;}
+.li-macro{font-size:.55rem;color:var(--g400);}
+.li-cal{font-size:.68rem;font-weight:800;color:var(--teal);margin-left:auto;margin-right:8px;}
+.li-del{font-size:.9rem;color:var(--g200);cursor:pointer;}
+.add-food-btn{
+  margin:0 20px;background:linear-gradient(135deg,var(--teal),var(--mint));
+  border-radius:16px;padding:14px;display:flex;align-items:center;justify-content:center;gap:8px;
+  cursor:pointer;box-shadow:0 4px 18px rgba(8,145,178,.3);
+  font-family:'Nunito',sans-serif;border:none;width:calc(100% - 40px);
+}
+.afb-text{font-size:.8rem;font-weight:800;color:#fff;}
+.daily-summary{margin:14px 20px 0;background:var(--card);border-radius:16px;padding:14px 16px;box-shadow:0 2px 12px rgba(0,0,0,.05);}
+.ds-title{font-size:.72rem;font-weight:800;color:var(--navy);margin-bottom:10px;}
+.ds-row{display:flex;justify-content:space-between;}
+.ds-stat{text-align:center;}
+.ds-val{font-size:1rem;font-weight:900;color:var(--navy);}
+.ds-lbl{font-size:.55rem;color:var(--g400);}
+
+/* ═══ ADD FOOD SCREEN ═══ */
+#s-addfood{background:var(--bg);padding-bottom:20px;}
+.af-search-area{padding:14px 20px;background:var(--card);border-bottom:1px solid var(--g100);}
+.af-search-box{display:flex;align-items:center;gap:10px;background:var(--g50);border:1.5px solid var(--g100);border-radius:12px;padding:10px 14px;}
+.af-search-box input{border:none;outline:none;background:transparent;font-family:'Nunito',sans-serif;font-size:.82rem;color:var(--navy);width:100%;}
+.af-search-box input::placeholder{color:var(--g400);}
+.af-category-strip{display:flex;gap:8px;padding:12px 20px;overflow-x:auto;scrollbar-width:none;background:var(--card);border-bottom:1px solid var(--g100);}
+.af-category-strip::-webkit-scrollbar{display:none;}
+.af-cat{padding:6px 14px;border-radius:100px;font-size:.65rem;font-weight:700;border:none;font-family:'Nunito',sans-serif;cursor:pointer;white-space:nowrap;}
+.af-cat.active{background:var(--teal);color:#fff;}
+.af-cat:not(.active){background:var(--g100);color:var(--g600);}
+.af-results-title{font-size:.7rem;font-weight:800;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;padding:14px 20px 8px;}
+.af-food-list{display:flex;flex-direction:column;gap:8px;padding:0 20px;}
+.af-food-item{
+  background:var(--card);border-radius:14px;padding:12px 14px;
+  display:flex;align-items:center;gap:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);cursor:pointer;
+  transition:transform .15s;
+}
+.af-food-item:active{transform:scale(.98);}
+.af-fi-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.af-fi-name{font-size:.75rem;font-weight:700;color:var(--navy);}
+.af-fi-macros{display:flex;gap:8px;margin-top:3px;}
+.af-fi-macro{font-size:.56rem;color:var(--g400);}
+.af-fi-safe{margin-left:auto;}
+.af-fi-add{
+  width:30px;height:30px;border-radius:9px;
+  background:var(--teal-pale);color:var(--teal);
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;
+  flex-shrink:0;cursor:pointer;
+}
+.af-fi-add.added{background:var(--mint-pale);color:var(--mint-d);}
+
+/* ═══ PROFILE SCREEN ═══ */
+#s-profile{background:var(--bg);}
+.prof-header{background:linear-gradient(150deg,var(--navy),var(--navy-m));padding:44px 20px 28px;border-radius:0 0 32px 32px;margin-bottom:16px;text-align:center;}
+.prof-avatar{width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,var(--teal),var(--mint));display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:2rem;color:#fff;margin:0 auto 12px;box-shadow:0 8px 24px rgba(8,145,178,.4);}
+.prof-name{font-size:1.1rem;font-weight:800;color:#fff;}
+.prof-meta{font-size:.65rem;color:rgba(255,255,255,.45);margin-top:4px;}
+.prof-chips{display:flex;justify-content:center;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.prof-chip{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);padding:4px 12px;border-radius:100px;font-size:.6rem;font-weight:700;}
+.prof-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 20px 14px;}
+.ps-card{background:var(--card);border-radius:14px;padding:12px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.05);}
+.ps-val{font-size:1rem;font-weight:900;color:var(--navy);}
+.ps-lbl{font-size:.56rem;color:var(--g400);margin-top:2px;}
+.menu-section{padding:0 20px;margin-bottom:10px;}
+.ms-label{font-size:.65rem;font-weight:800;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+.menu-item{background:var(--card);border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:transform .15s;}
+.menu-item:active{transform:scale(.98);}
+.mi-icon-wrap{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.mi-label{flex:1;font-size:.72rem;font-weight:700;color:var(--navy);}
+.mi-arrow{font-size:.8rem;color:var(--g200);}
+.mi-badge{font-size:.56rem;font-weight:800;padding:2px 8px;border-radius:100px;background:var(--teal-pale);color:var(--teal);}
+.logout-btn{margin:4px 20px 0;background:#fff;border:1.5px solid var(--red-pale);border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.logout-btn .mi-label{color:var(--coral);}
+
+/* ═══ SUB-SCREENS SHARED ═══ */
+.sub-body{padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+.sub-card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.05);}
+.sub-section-title{font-size:.68rem;font-weight:800;color:var(--g400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--g100);}
+.info-row:last-child{border-bottom:none;}
+.ir-label{font-size:.72rem;color:var(--g600);}
+.ir-val{font-size:.75rem;font-weight:800;color:var(--navy);}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--g100);}
+.toggle-row:last-child{border-bottom:none;}
+.tr-label{font-size:.72rem;font-weight:700;color:var(--navy);}
+.tr-sub{font-size:.6rem;color:var(--g400);margin-top:2px;}
+.toggle{width:40px;height:22px;border-radius:11px;background:var(--teal);position:relative;cursor:pointer;flex-shrink:0;}
+.toggle::after{content:'';position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:right .2s;}
+.toggle.off{background:var(--g200);}
+.toggle.off::after{right:auto;left:3px;}
+
+.spacer{height:8px;}
+</style>
+</head>
+<body>
+<div class="demo-wrap">
+  <div>
+    <div class="demo-label">NephroTrack <span>Kidney Care App</span></div>
+    <div class="demo-sub">Interactive Demo — Tap bottom nav to explore all screens</div>
+  </div>
+
+  <div class="phone-shell">
+    <div class="cam"></div>
+    <div class="screen-area">
+
+      <div class="status-bar" id="statusBar">
+        <span>9:41</span>
+        <div class="sb-right"><span>▲</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+
+      <div class="screens">
+
+        <!-- ════════ LOGIN ════════ -->
+        <div class="screen active" id="s-login">
+          <div class="login-body">
+            <div class="login-logo">🫘</div>
+            <div class="login-title">Nephro<span>Track</span></div>
+            <div class="login-sub">Your kidney care companion.<br/>Log in to manage your diet &amp; health.</div>
+            <div class="login-card">
+              <div class="login-field-label">Mobile Number</div>
+              <div class="phone-input-wrap">
+                <div class="country-code">+91</div>
+                <input class="phone-field" type="tel" placeholder="98765 43210" maxlength="10" id="phoneInput"/>
+              </div>
+              <button class="send-otp-btn" onclick="goOTP()">Send OTP →</button>
+            </div>
+            <div class="login-footer">By continuing, you agree to our<br/>Terms of Service &amp; Privacy Policy</div>
+          </div>
+        </div>
+
+        <!-- ════════ OTP ════════ -->
+        <div class="screen" id="s-otp">
+          <div class="otp-body" style="width:100%;">
+            <div class="otp-back" onclick="showOnly('s-login')">← Back</div>
+            <div class="otp-icon-wrap">💬</div>
+            <div class="otp-title">Verify OTP</div>
+            <div class="otp-sub">We sent a 4-digit code to<br/><strong id="otpPhone">+91 98765 43210</strong></div>
+            <div class="otp-boxes">
+              <div class="otp-box active-box" id="ob0"></div>
+              <div class="otp-box" id="ob1"></div>
+              <div class="otp-box" id="ob2"></div>
+              <div class="otp-box" id="ob3"></div>
+            </div>
+            <button class="verify-btn" onclick="verifyOTP()">Verify &amp; Login →</button>
+            <div class="resend-row">
+              <span class="resend-text">Didn't receive the code?</span>
+              <span class="resend-link">Resend OTP</span>
+            </div>
+            <div class="otp-keypad" style="width:100%;">
+              <div class="kp-btn" onclick="otpKey('1')">1</div>
+              <div class="kp-btn" onclick="otpKey('2')">2</div>
+              <div class="kp-btn" onclick="otpKey('3')">3</div>
+              <div class="kp-btn" onclick="otpKey('4')">4</div>
+              <div class="kp-btn" onclick="otpKey('5')">5</div>
+              <div class="kp-btn" onclick="otpKey('6')">6</div>
+              <div class="kp-btn" onclick="otpKey('7')">7</div>
+              <div class="kp-btn" onclick="otpKey('8')">8</div>
+              <div class="kp-btn" onclick="otpKey('9')">9</div>
+              <div class="kp-btn" style="opacity:.3"></div>
+              <div class="kp-btn" onclick="otpKey('0')">0</div>
+              <div class="kp-btn" onclick="otpDel()">⌫</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════ HOME ════════ -->
+        <div class="screen" id="s-home">
+          <div class="home-header">
+            <div class="hh-row">
+              <div class="hh-left">
+                <div class="greet">Good morning,</div>
+                <div class="uname">Rajan Joshi 👋</div>
+                <div class="meta">Stage 5 CKD &nbsp;·&nbsp; HD 3×/week</div>
+              </div>
+              <div class="notif-btn">🔔<span class="n-dot"></span></div>
+            </div>
+            <div class="dial-card">
+              <div class="dc-ico">💉</div>
+              <div><div class="dc-top">Next Dialysis Session</div><div class="dc-val">Tomorrow, 8:00 AM — City Hospital</div></div>
+              <span class="dc-badge">On Track</span>
+            </div>
+          </div>
+          <div class="section-hdr">
+            <span class="sh-title">Today's Nutrients</span>
+            <span class="sh-link" onclick="navigate('s-nutrients')">View All →</span>
+          </div>
+          <div class="nut-grid">
+            <div class="nut-card">
+              <div class="nc-top"><span class="nc-ico">🥩</span><span class="nc-pct" style="color:#10b981">77%</span></div>
+              <div class="nc-name">Protein</div><div class="nc-val">62g <span style="font-size:.6rem;color:var(--g400);font-weight:500">/ 80g</span></div>
+              <div class="nc-bar"><div class="nc-fill" style="width:77%;background:#10b981"></div></div>
+            </div>
+            <div class="nut-card">
+              <div class="nc-top"><span class="nc-ico">🍌</span><span class="nc-pct" style="color:#f59e0b">91%</span></div>
+              <div class="nc-name">Potassium</div><div class="nc-val">1.82g <span style="font-size:.6rem;color:var(--g400);font-weight:500">/ 2g</span></div>
+              <div class="nc-bar"><div class="nc-fill" style="width:91%;background:#f59e0b"></div></div>
+            </div>
+            <div class="nut-card">
+              <div class="nc-top"><span class="nc-ico">🧂</span><span class="nc-pct" style="color:#f43f5e">97%</span></div>
+              <div class="nc-name">Sodium</div><div class="nc-val">1.94g <span style="font-size:.6rem;color:var(--g400);font-weight:500">/ 2g</span></div>
+              <div class="nc-bar"><div class="nc-fill" style="width:97%;background:#f43f5e"></div></div>
+            </div>
+            <div class="nut-card">
+              <div class="nc-top"><span class="nc-ico">💧</span><span class="nc-pct" style="color:#0891b2">60%</span></div>
+              <div class="nc-name">Fluid</div><div class="nc-val">900mL <span style="font-size:.6rem;color:var(--g400);font-weight:500">/ 1.5L</span></div>
+              <div class="nc-bar"><div class="nc-fill" style="width:60%;background:#0891b2"></div></div>
+            </div>
+          </div>
+          <div class="quick-log-btn" onclick="navigate('s-foodlog')">
+            <span class="qlb-ico">➕</span>
+            <div><div class="qlb-t1">Log a Meal</div><div class="qlb-t2">Tap to add your food intake</div></div>
+            <span class="qlb-arr">›</span>
+          </div>
+          <div class="upcoming-card">
+            <div class="uc-title">🗓 Today's Meal Schedule</div>
+            <div class="uc-row">
+              <div class="uc-dot" style="background:#10b981"></div>
+              <div style="flex:1"><div class="uc-meal">Breakfast — Egg white omelette, Toast</div><div class="uc-time">7:30 AM · Completed</div></div>
+              <div class="uc-cal">320 kcal</div>
+            </div>
+            <div class="uc-row">
+              <div class="uc-dot" style="background:#0891b2"></div>
+              <div style="flex:1"><div class="uc-meal">Lunch — Rice, Grilled Chicken</div><div class="uc-time">1:00 PM · Upcoming</div></div>
+              <div class="uc-cal">480 kcal</div>
+            </div>
+            <div class="uc-row">
+              <div class="uc-dot" style="background:#e2eef4"></div>
+              <div style="flex:1"><div class="uc-meal">Dinner — Chapati, Dal (low sodium)</div><div class="uc-time">7:30 PM · Planned</div></div>
+              <div class="uc-cal">390 kcal</div>
+            </div>
+          </div>
+          <div class="spacer"></div>
+        </div>
+
+        <!-- ════════ NUTRIENTS ════════ -->
+        <div class="screen" id="s-nutrients">
+          <div class="nt-header">
+            <div class="nt-title">Nutrient Tracker</div>
+            <div class="nt-date">Saturday, 14 March 2026</div>
+            <div class="nt-ring-row">
+              <div class="ring-wrap">
+                <svg width="80" height="80" viewBox="0 0 80 80">
+                  <circle cx="40" cy="40" r="32" stroke="rgba(255,255,255,.15)" stroke-width="8" fill="none"/>
+                  <circle cx="40" cy="40" r="32" stroke="#22d3ee" stroke-width="8" fill="none" stroke-dasharray="201" stroke-dashoffset="50" stroke-linecap="round"/>
+                </svg>
+                <div class="ring-ctr"><div class="ring-pct">75%</div><div class="ring-lbl">Daily</div></div>
+              </div>
+              <div class="nt-chips">
+                <span class="chip chip-g">✓ Protein</span>
+                <span class="chip chip-w">⚠ Potassium</span>
+                <span class="chip chip-r">✕ Sodium</span>
+                <span class="chip chip-g">✓ Phosphorus</span>
+                <span class="chip chip-g">✓ Fluid</span>
+              </div>
+            </div>
+          </div>
+          <div class="nut-list">
+            <div class="nl-card">
+              <div class="nl-top">
+                <div class="nl-ico" style="background:var(--mint-pale)">🥩</div>
+                <div style="flex:1"><div class="nl-name">Protein</div><div class="nl-target">Target: 80g/day</div></div>
+                <span class="nl-status" style="background:var(--mint-pale);color:#059669">On Track</span>
+              </div>
+              <div class="nl-bar-bg"><div class="nl-bar-fill" style="width:77%;background:#10b981"></div></div>
+              <div class="nl-footer"><span class="nl-consumed">Consumed: 62g</span><span class="nl-remaining" style="color:#10b981">18g remaining</span></div>
+            </div>
+            <div class="nl-card">
+              <div class="nl-top">
+                <div class="nl-ico" style="background:var(--amber-pale)">🍌</div>
+                <div style="flex:1"><div class="nl-name">Potassium</div><div class="nl-target">Limit: 2.0g/day</div></div>
+                <span class="nl-status" style="background:var(--amber-pale);color:#92550a">Near Limit</span>
+              </div>
+              <div class="nl-bar-bg"><div class="nl-bar-fill" style="width:91%;background:#f59e0b"></div></div>
+              <div class="nl-footer"><span class="nl-consumed">Consumed: 1.82g</span><span class="nl-remaining" style="color:#f59e0b">0.18g left</span></div>
+            </div>
+            <div class="nl-card">
+              <div class="nl-top">
+                <div class="nl-ico" style="background:var(--red-pale)">🧂</div>
+                <div style="flex:1"><div class="nl-name">Sodium</div><div class="nl-target">Limit: 2.0g/day</div></div>
+                <span class="nl-status" style="background:var(--red-pale);color:#9f1239">Exceeded</span>
+              </div>
+              <div class="nl-bar-bg"><div class="nl-bar-fill" style="width:97%;background:#f43f5e"></div></div>
+              <div class="nl-footer"><span class="nl-consumed">Consumed: 1.94g</span><span class="nl-remaining" style="color:#f43f5e">0.06g left</span></div>
+            </div>
+            <div class="nl-card">
+              <div class="nl-top">
+                <div class="nl-ico" style="background:var(--violet-pale)">🫘</div>
+                <div style="flex:1"><div class="nl-name">Phosphorus</div><div class="nl-target">Limit: 1100mg/day</div></div>
+                <span class="nl-status" style="background:var(--mint-pale);color:#059669">On Track</span>
+              </div>
+              <div class="nl-bar-bg"><div class="nl-bar-fill" style="width:58%;background:#8b5cf6"></div></div>
+              <div class="nl-footer"><span class="nl-consumed">Consumed: 640mg</span><span class="nl-remaining" style="color:#8b5cf6">460mg remaining</span></div>
+            </div>
+            <div class="nl-card">
+              <div class="nl-top">
+                <div class="nl-ico" style="background:var(--teal-pale)">💧</div>
+                <div style="flex:1"><div class="nl-name">Fluid Intake</div><div class="nl-target">Limit: 1500mL/day</div></div>
+                <span class="nl-status" style="background:var(--mint-pale);color:#059669">On Track</span>
+              </div>
+              <div class="nl-bar-bg"><div class="nl-bar-fill" style="width:60%;background:#0891b2"></div></div>
+              <div class="nl-footer"><span class="nl-consumed">Consumed: 900mL</span><span class="nl-remaining" style="color:#0891b2">600mL remaining</span></div>
+            </div>
+          </div>
+          <div class="spacer"></div>
+        </div>
+
+        <!-- ════════ MEALS ════════ -->
+        <div class="screen" id="s-meals">
+          <div class="mp-header">
+            <div class="mp-title">Weekly Meal Plan</div>
+            <div class="mp-sub">Dietitian-approved · Kidney-safe</div>
+          </div>
+          <div class="week-strip" id="weekStrip">
+            <button class="day-btn" onclick="setDay(this,0)"><span>Mon</span><span class="d-num">9</span></button>
+            <button class="day-btn" onclick="setDay(this,1)"><span>Tue</span><span class="d-num">10</span></button>
+            <button class="day-btn" onclick="setDay(this,2)"><span>Wed</span><span class="d-num">11</span></button>
+            <button class="day-btn" onclick="setDay(this,3)"><span>Thu</span><span class="d-num">12</span></button>
+            <button class="day-btn" onclick="setDay(this,4)"><span>Fri</span><span class="d-num">13</span></button>
+            <button class="day-btn active" onclick="setDay(this,5)"><span>Sat</span><span class="d-num">14</span></button>
+            <button class="day-btn" onclick="setDay(this,6)"><span>Sun</span><span class="d-num">15</span></button>
+          </div>
+          <div id="mealPlanContent"></div>
+          <div class="spacer"></div>
+        </div>
+
+        <!-- ════════ HEALTH ════════ -->
+        <div class="screen" id="s-health">
+          <div class="hm-header">
+            <div class="hm-title">Health Metrics</div>
+            <div class="hm-sub">Dialysis progress &amp; vitals</div>
+          </div>
+          <div class="hm-big">
+            <span class="hmb-ico">⚖️</span>
+            <div><div class="hmb-val">68.4<span class="hmb-unit"> kg</span></div><div class="hmb-label">Today's pre-dialysis weight</div></div>
+            <div class="hmb-trend">↓ 0.6kg</div>
+          </div>
+          <div class="metrics-2col">
+            <div class="metric-card"><div class="mc-ico">🩸</div><div class="mc-val">130<span class="mc-u">/85</span></div><div class="mc-label">Blood Pressure (mmHg)</div><div class="mc-trend t-dn">↓ Improving</div></div>
+            <div class="metric-card"><div class="mc-ico">💧</div><div class="mc-val">1.2<span class="mc-u">L</span></div><div class="mc-label">UF Volume removed</div><div class="mc-trend t-dn">↓ Within target</div></div>
+            <div class="metric-card"><div class="mc-ico">❤️</div><div class="mc-val">74<span class="mc-u"> bpm</span></div><div class="mc-label">Heart Rate</div><div class="mc-trend t-dn">↓ Normal</div></div>
+            <div class="metric-card"><div class="mc-ico">🧪</div><div class="mc-val">1.4<span class="mc-u"> g/dL</span></div><div class="mc-label">Albumin (last test)</div><div class="mc-trend t-up">↑ Borderline</div></div>
+          </div>
+          <div class="trend-chart">
+            <div class="tc-title">📈 Weight Trend — Last 7 Sessions</div>
+            <div class="bars">
+              <div class="bar-col"><div class="bar-fill" style="height:62px"></div><div class="bar-label">Mar 1</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:68px"></div><div class="bar-label">Mar 3</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:65px"></div><div class="bar-label">Mar 5</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:70px"></div><div class="bar-label">Mar 7</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:62px"></div><div class="bar-label">Mar 10</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:58px"></div><div class="bar-label">Mar 12</div></div>
+              <div class="bar-col"><div class="bar-fill hl" style="height:54px"></div><div class="bar-label">Mar 14</div></div>
+            </div>
+          </div>
+          <div class="session-log">
+            <div class="sl-title">Dialysis Session Log <span>View all</span></div>
+            <div class="sl-row"><div class="sl-date">Mar 12, 2026</div><div class="sl-wt">69.0 kg</div><div class="sl-uf">1.4L UF</div><span class="sl-badge" style="background:var(--mint-pale);color:#059669">Stable</span></div>
+            <div class="sl-row"><div class="sl-date">Mar 10, 2026</div><div class="sl-wt">69.8 kg</div><div class="sl-uf">1.8L UF</div><span class="sl-badge" style="background:var(--amber-pale);color:#92550a">+0.8kg</span></div>
+            <div class="sl-row"><div class="sl-date">Mar 7, 2026</div><div class="sl-wt">70.2 kg</div><div class="sl-uf">2.0L UF</div><span class="sl-badge" style="background:var(--red-pale);color:#9f1239">+1.2kg</span></div>
+          </div>
+          <div class="spacer"></div>
+        </div>
+
+        <!-- ════════ GAMIFICATION ════════ -->
+        <div class="screen" id="s-game">
+          <div class="gm-header">
+            <div class="gm-title">My Progress</div>
+            <div class="gm-sub">Keep going — you're doing great!</div>
+          </div>
+          <div class="streak-card">
+            <div><div class="sc-num">12 🔥</div><div class="sc-label">Day Streak</div><div class="sc-best">Personal best: 18 days</div></div>
+            <div class="sc-right">🛡️</div>
+          </div>
+          <div class="badges-section">
+            <div class="bs-title">Badges Earned</div>
+            <div class="badges-grid">
+              <div class="badge earned"><div class="badge-ic">⭐</div><div class="badge-nm">7 Day Streak</div></div>
+              <div class="badge earned"><div class="badge-ic">💧</div><div class="badge-nm">Fluid Master</div></div>
+              <div class="badge earned"><div class="badge-ic">🥗</div><div class="badge-nm">Meal Logger</div></div>
+              <div class="badge earned"><div class="badge-ic">📊</div><div class="badge-nm">Data Hero</div></div>
+              <div class="badge"><div class="badge-ic">🏆</div><div class="badge-nm">30 Day Goal</div></div>
+              <div class="badge"><div class="badge-ic">🎯</div><div class="badge-nm">Protein Pro</div></div>
+              <div class="badge"><div class="badge-ic">🌟</div><div class="badge-nm">Top Patient</div></div>
+              <div class="badge"><div class="badge-ic">💎</div><div class="badge-nm">Diamond</div></div>
+            </div>
+          </div>
+          <div class="weekly-goals">
+            <div class="wg-title">This Week's Goals</div>
+            <div class="wg-row"><span class="wg-label">Meals logged</span><div class="wg-bar-bg"><div class="wg-bar-fill" style="width:85%;background:#10b981"></div></div><span class="wg-pts">85%</span></div>
+            <div class="wg-row"><span class="wg-label">Fluid target</span><div class="wg-bar-bg"><div class="wg-bar-fill" style="width:72%;background:#0891b2"></div></div><span class="wg-pts">72%</span></div>
+            <div class="wg-row"><span class="wg-label">Weight checks</span><div class="wg-bar-bg"><div class="wg-bar-fill" style="width:100%;background:#f59e0b"></div></div><span class="wg-pts">100%</span></div>
+            <div class="wg-row"><span class="wg-label">K+ within limit</span><div class="wg-bar-bg"><div class="wg-bar-fill" style="width:60%;background:#8b5cf6"></div></div><span class="wg-pts">60%</span></div>
+          </div>
+          <div class="spacer"></div>
+        </div>
+
+        <!-- ════════ FOOD LOG ════════ -->
+        <div class="screen" id="s-foodlog">
+          <div class="fl-header">
+            <div class="fl-title">Food Log</div>
+            <div class="fl-sub">Saturday, 14 March 2026</div>
+          </div>
+          <div class="fl-search">
+            <span class="fl-search-ico">🔍</span>
+            <input class="fl-search-input" type="text" placeholder="Search food item…"/>
+          </div>
+          <div class="meal-type-tabs">
+            <button class="mt-tab active">🌅 Breakfast</button>
+            <button class="mt-tab">☀️ Lunch</button>
+            <button class="mt-tab">🌙 Dinner</button>
+            <button class="mt-tab">🍎 Snack</button>
+          </div>
+          <div class="logged-items">
+            <div class="li-section-title">Logged items — Breakfast</div>
+            <div class="log-item">
+              <div class="li-ico" style="background:var(--mint-pale)">🥚</div>
+              <div style="flex:1"><div class="li-name">Egg white omelette</div><div class="li-macros"><span class="li-macro">P: 12g</span><span class="li-macro">K: 140mg</span><span class="li-macro">Na: 120mg</span></div></div>
+              <div class="li-cal">68 kcal</div><div class="li-del">✕</div>
+            </div>
+            <div class="log-item">
+              <div class="li-ico" style="background:var(--amber-pale)">🍞</div>
+              <div style="flex:1"><div class="li-name">White bread toast</div><div class="li-macros"><span class="li-macro">P: 2.3g</span><span class="li-macro">K: 36mg</span><span class="li-macro">Na: 130mg</span></div></div>
+              <div class="li-cal">79 kcal</div><div class="li-del">✕</div>
+            </div>
+            <div class="log-item">
+              <div class="li-ico" style="background:var(--teal-pale)">🍎</div>
+              <div style="flex:1"><div class="li-name">Apple, small (120g)</div><div class="li-macros"><span class="li-macro">P: 0.3g</span><span class="li-macro">K: 107mg</span><span class="li-macro">Na: 1mg</span></div></div>
+              <div class="li-cal">62 kcal</div><div class="li-del">✕</div>
+            </div>
+          </div>
+          <button class="add-food-btn" onclick="navigate('s-addfood')">
+            <span>➕</span>
+            <span class="afb-text">Add Food Item</span>
+          </button>
+          <div class="daily-summary">
+            <div class="ds-title">Today's Running Total</div>
+            <div class="ds-row">
+              <div class="ds-stat"><div class="ds-val">209</div><div class="ds-lbl">kcal</div></div>
+              <div class="ds-stat"><div class="ds-val" style="color:#10b981">14.6g</div><div class="ds-lbl">Protein</div></div>
+              <div class="ds-stat"><div class="ds-val" style="color:#f59e0b">283mg</div><div class="ds-lbl">Potassium</div></div>
+              <div class="ds-stat"><div class="ds-val" style="color:#8b5cf6">251mg</div><div class="ds-lbl">Na</div></div>
+            </div>
+          </div>
+          <div class="spacer"></div>
+        </div>
+
+        <!-- ════════ ADD FOOD (sub) ════════ -->
+        <div class="screen sub" id="s-addfood">
+          <div class="back-header">
+            <div class="back-btn" onclick="navigate('s-foodlog')">←</div>
+            <div><div class="bh-title">Add Food Item</div><div class="bh-sub">Search &amp; add to Breakfast</div></div>
+          </div>
+          <div class="af-search-area">
+            <div class="af-search-box">
+              <span style="color:var(--g400);font-size:1rem;">🔍</span>
+              <input type="text" id="afSearchInput" placeholder="Search food (e.g. Rice, Apple…)" oninput="filterFoods()" style="font-family:'Nunito',sans-serif;font-size:.8rem;border:none;outline:none;background:transparent;color:var(--navy);width:100%;"/>
+            </div>
+          </div>
+          <div class="af-category-strip" id="afCategoryStrip">
+            <button class="af-cat active" onclick="selectCat(this,'All')">All</button>
+            <button class="af-cat" onclick="selectCat(this,'Grains')">🌾 Grains</button>
+            <button class="af-cat" onclick="selectCat(this,'Proteins')">🥩 Proteins</button>
+            <button class="af-cat" onclick="selectCat(this,'Vegetables')">🥦 Vegetables</button>
+            <button class="af-cat" onclick="selectCat(this,'Fruits')">🍎 Fruits</button>
+            <button class="af-cat" onclick="selectCat(this,'Fluids')">💧 Fluids</button>
+          </div>
+          <div class="af-results-title" id="afResultsTitle">All Kidney-Safe Foods</div>
+          <div class="af-food-list" id="afFoodList"></div>
+          <div style="height:20px;"></div>
+        </div>
+
+        <!-- ════════ PROFILE ════════ -->
+        <div class="screen" id="s-profile">
+          <div class="prof-header">
+            <div class="prof-avatar">RJ</div>
+            <div class="prof-name">Rajan Joshi</div>
+            <div class="prof-meta">Male · 54 yrs · Blood Group B+</div>
+            <div class="prof-chips">
+              <span class="prof-chip">Stage 5 CKD</span>
+              <span class="prof-chip">HD 3×/week</span>
+              <span class="prof-chip">Diabetic</span>
+            </div>
+          </div>
+          <div class="prof-stats">
+            <div class="ps-card"><div class="ps-val">12🔥</div><div class="ps-lbl">Day Streak</div></div>
+            <div class="ps-card"><div class="ps-val">68.4<span style="font-size:.55rem">kg</span></div><div class="ps-lbl">Current Weight</div></div>
+          </div>
+          <div class="menu-section">
+            <div class="ms-label">Health Settings</div>
+            <div class="menu-item" onclick="navigate('s-nutrient-limits')">
+              <div class="mi-icon-wrap" style="background:var(--teal-pale)">⚙️</div>
+              <span class="mi-label">Nutrient Limits &amp; Targets</span>
+              <span class="mi-arrow">›</span>
+            </div>
+            <div class="menu-item" onclick="navigate('s-medical-profile')">
+              <div class="mi-icon-wrap" style="background:var(--mint-pale)">🩺</div>
+              <span class="mi-label">Medical Profile</span>
+              <span class="mi-arrow">›</span>
+            </div>
+            <div class="menu-item" onclick="navigate('s-medications')">
+              <div class="mi-icon-wrap" style="background:var(--amber-pale)">💊</div>
+              <span class="mi-label">Medications</span>
+              <span class="mi-badge">3 active</span>
+              <span class="mi-arrow">›</span>
+            </div>
+          </div>
+          <div class="menu-section">
+            <div class="ms-label">App Settings</div>
+            <div class="menu-item" onclick="navigate('s-notifications')">
+              <div class="mi-icon-wrap" style="background:var(--violet-pale)">🔔</div>
+              <span class="mi-label">Notifications &amp; Reminders</span>
+              <span class="mi-arrow">›</span>
+            </div>
+            <div class="menu-item" onclick="navigate('s-whatsapp')">
+              <div class="mi-icon-wrap" style="background:var(--mint-pale)">💬</div>
+              <span class="mi-label">WhatsApp Alerts</span>
+              <span class="mi-badge">Active</span>
+              <span class="mi-arrow">›</span>
+            </div>
+            <div class="menu-item">
+              <div class="mi-icon-wrap" style="background:var(--g100)">👩‍⚕️</div>
+              <span class="mi-label">My Health Coach</span>
+              <span class="mi-arrow">›</span>
+            </div>
+            <div class="menu-item">
+              <div class="mi-icon-wrap" style="background:var(--g100)">📋</div>
+              <span class="mi-label">Reports &amp; History</span>
+              <span class="mi-arrow">›</span>
+            </div>
+          </div>
+          <div class="logout-btn" onclick="doLogout()">
+            <div class="mi-icon-wrap" style="background:var(--red-pale)">🚪</div>
+            <span class="mi-label">Sign Out</span>
+          </div>
+          <div class="spacer"></div>
+        </div>
+
+        <!-- ════════ SUB: NUTRIENT LIMITS ════════ -->
+        <div class="screen sub" id="s-nutrient-limits">
+          <div class="back-header">
+            <div class="back-btn" onclick="navigate('s-profile')">←</div>
+            <div><div class="bh-title">Nutrient Limits &amp; Targets</div><div class="bh-sub">Set by your dietitian</div></div>
+          </div>
+          <div class="sub-body">
+            <div style="font-size:.7rem;color:var(--g600);background:var(--teal-pale);border-radius:12px;padding:10px 14px;line-height:1.6;">
+              ℹ️ These limits are pre-set by your renal dietitian based on your latest lab reports. Contact your care team to update them.
+            </div>
+            <div class="sub-card">
+              <div class="sub-section-title">Daily Nutrient Limits</div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div class="nl-setting-row">
+                  <div class="nlsr-ico" style="background:var(--mint-pale)">🥩</div>
+                  <div class="nlsr-info"><div class="nlsr-name">Protein</div><div class="nlsr-current">Recommended intake</div></div>
+                  <input class="nlsr-input" type="number" value="80"/><span class="nlsr-unit">g</span>
+                </div>
+                <div class="nl-setting-row">
+                  <div class="nlsr-ico" style="background:var(--amber-pale)">🍌</div>
+                  <div class="nlsr-info"><div class="nlsr-name">Potassium</div><div class="nlsr-current">Upper daily limit</div></div>
+                  <input class="nlsr-input" type="number" value="2000"/><span class="nlsr-unit">mg</span>
+                </div>
+                <div class="nl-setting-row">
+                  <div class="nlsr-ico" style="background:var(--red-pale)">🧂</div>
+                  <div class="nlsr-info"><div class="nlsr-name">Sodium</div><div class="nlsr-current">Upper daily limit</div></div>
+                  <input class="nlsr-input" type="number" value="2000"/><span class="nlsr-unit">mg</span>
+                </div>
+                <div class="nl-setting-row">
+                  <div class="nlsr-ico" style="background:var(--violet-pale)">🫘</div>
+                  <div class="nlsr-info"><div class="nlsr-name">Phosphorus</div><div class="nlsr-current">Upper daily limit</div></div>
+                  <input class="nlsr-input" type="number" value="1100"/><span class="nlsr-unit">mg</span>
+                </div>
+                <div class="nl-setting-row">
+                  <div class="nlsr-ico" style="background:var(--teal-pale)">💧</div>
+                  <div class="nlsr-info"><div class="nlsr-name">Fluid Intake</div><div class="nlsr-current">Upper daily limit</div></div>
+                  <input class="nlsr-input" type="number" value="1500"/><span class="nlsr-unit">mL</span>
+                </div>
+              </div>
+            </div>
+            <button class="form-save-btn" style="margin:0;">Save Changes</button>
+          </div>
+        </div>
+
+        <!-- ════════ SUB: MEDICAL PROFILE ════════ -->
+        <div class="screen sub" id="s-medical-profile">
+          <div class="back-header">
+            <div class="back-btn" onclick="navigate('s-profile')">←</div>
+            <div><div class="bh-title">Medical Profile</div><div class="bh-sub">Your kidney health details</div></div>
+          </div>
+          <div class="sub-body">
+            <div class="sub-card">
+              <div class="sub-section-title">Patient Details</div>
+              <div class="info-row"><span class="ir-label">Full Name</span><span class="ir-val">Rajan Joshi</span></div>
+              <div class="info-row"><span class="ir-label">Age</span><span class="ir-val">54 years</span></div>
+              <div class="info-row"><span class="ir-label">Gender</span><span class="ir-val">Male</span></div>
+              <div class="info-row"><span class="ir-label">Blood Group</span><span class="ir-val">B+</span></div>
+              <div class="info-row"><span class="ir-label">Height</span><span class="ir-val">168 cm</span></div>
+              <div class="info-row"><span class="ir-label">Dry Weight</span><span class="ir-val">67.0 kg</span></div>
+            </div>
+            <div class="sub-card">
+              <div class="sub-section-title">Kidney Disease</div>
+              <div class="info-row"><span class="ir-label">CKD Stage</span><span class="ir-val" style="color:var(--coral);font-weight:800;">Stage 5</span></div>
+              <div class="info-row"><span class="ir-label">Dialysis Type</span><span class="ir-val">Haemodialysis (HD)</span></div>
+              <div class="info-row"><span class="ir-label">Frequency</span><span class="ir-val">3×/week</span></div>
+              <div class="info-row"><span class="ir-label">Dialysis Centre</span><span class="ir-val">City Hospital</span></div>
+              <div class="info-row"><span class="ir-label">Nephrologist</span><span class="ir-val">Dr. Priya Menon</span></div>
+              <div class="info-row"><span class="ir-label">Dietitian</span><span class="ir-val">Anita Sharma, RD</span></div>
+            </div>
+            <div class="sub-card">
+              <div class="sub-section-title">Comorbidities</div>
+              <div class="info-row"><span class="ir-label">Type 2 Diabetes</span><span class="ir-val" style="color:var(--amber);">Yes</span></div>
+              <div class="info-row"><span class="ir-label">Hypertension</span><span class="ir-val" style="color:var(--amber);">Yes</span></div>
+              <div class="info-row"><span class="ir-label">Anaemia</span><span class="ir-val" style="color:var(--g400);">Monitored</span></div>
+            </div>
+            <div class="sub-card">
+              <div class="sub-section-title">Latest Lab Values</div>
+              <div class="info-row"><span class="ir-label">Serum Potassium</span><span class="ir-val">4.8 mEq/L</span></div>
+              <div class="info-row"><span class="ir-label">Serum Phosphorus</span><span class="ir-val">5.2 mg/dL</span></div>
+              <div class="info-row"><span class="ir-label">Serum Albumin</span><span class="ir-val">3.4 g/dL</span></div>
+              <div class="info-row"><span class="ir-label">Haemoglobin</span><span class="ir-val">9.8 g/dL</span></div>
+              <div class="info-row"><span class="ir-label">Last Updated</span><span class="ir-val">10 Mar 2026</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════ SUB: MEDICATIONS ════════ -->
+        <div class="screen sub" id="s-medications">
+          <div class="back-header">
+            <div class="back-btn" onclick="navigate('s-profile')">←</div>
+            <div><div class="bh-title">Medications</div><div class="bh-sub">3 active medications</div></div>
+          </div>
+          <div class="sub-body">
+            <div class="med-card">
+              <div class="mc-top">
+                <div class="mc-ico">💊</div>
+                <div style="flex:1"><div class="mc-name">Sevelamer Carbonate</div><div class="mc-dosage">800mg · 3 times/day · With meals</div></div>
+              </div>
+              <div class="mc-tags">
+                <span class="mc-tag" style="background:var(--violet-pale);color:#5b21b6;">Phosphate Binder</span>
+                <span class="mc-tag" style="background:var(--mint-pale);color:var(--mint-d);">Active</span>
+              </div>
+            </div>
+            <div class="med-card">
+              <div class="mc-top">
+                <div class="mc-ico" style="background:var(--teal-pale);">💉</div>
+                <div style="flex:1"><div class="mc-name">Erythropoietin (EPO)</div><div class="mc-dosage">4000 IU · Weekly · Injection</div></div>
+              </div>
+              <div class="mc-tags">
+                <span class="mc-tag" style="background:var(--teal-pale);color:var(--teal-d);">Anaemia Treatment</span>
+                <span class="mc-tag" style="background:var(--mint-pale);color:var(--mint-d);">Active</span>
+              </div>
+            </div>
+            <div class="med-card">
+              <div class="mc-top">
+                <div class="mc-ico" style="background:var(--red-pale);">💊</div>
+                <div style="flex:1"><div class="mc-name">Amlodipine</div><div class="mc-dosage">5mg · Once daily · Morning</div></div>
+              </div>
+              <div class="mc-tags">
+                <span class="mc-tag" style="background:var(--red-pale);color:#9f1239;">BP Control</span>
+                <span class="mc-tag" style="background:var(--mint-pale);color:var(--mint-d);">Active</span>
+              </div>
+            </div>
+            <button class="add-item-btn">
+              <span>➕</span> Add Medication
+            </button>
+          </div>
+        </div>
+
+        <!-- ════════ SUB: NOTIFICATIONS ════════ -->
+        <div class="screen sub" id="s-notifications">
+          <div class="back-header">
+            <div class="back-btn" onclick="navigate('s-profile')">←</div>
+            <div><div class="bh-title">Notifications</div><div class="bh-sub">Manage reminders &amp; alerts</div></div>
+          </div>
+          <div class="sub-body">
+            <div class="sub-card">
+              <div class="sub-section-title">Meal Reminders</div>
+              <div class="toggle-row">
+                <div><div class="tr-label">Breakfast Reminder</div><div class="tr-sub">7:15 AM daily</div></div>
+                <div class="toggle"></div>
+              </div>
+              <div class="toggle-row">
+                <div><div class="tr-label">Lunch Reminder</div><div class="tr-sub">12:45 PM daily</div></div>
+                <div class="toggle"></div>
+              </div>
+              <div class="toggle-row">
+                <div><div class="tr-label">Dinner Reminder</div><div class="tr-sub">7:15 PM daily</div></div>
+                <div class="toggle"></div>
+              </div>
+            </div>
+            <div class="sub-card">
+              <div class="sub-section-title">Health Alerts</div>
+              <div class="toggle-row">
+                <div><div class="tr-label">Nutrient Limit Warning</div><div class="tr-sub">Alert when near daily limit</div></div>
+                <div class="toggle"></div>
+              </div>
+              <div class="toggle-row">
+                <div><div class="tr-label">Fluid Intake Alert</div><div class="tr-sub">Alert at 80% of fluid limit</div></div>
+                <div class="toggle"></div>
+              </div>
+              <div class="toggle-row">
+                <div><div class="tr-label">Dialysis Day Reminder</div><div class="tr-sub">Evening before session</div></div>
+                <div class="toggle"></div>
+              </div>
+            </div>
+            <div class="sub-card">
+              <div class="sub-section-title">Medication Reminders</div>
+              <div class="toggle-row">
+                <div><div class="tr-label">Medication Reminders</div><div class="tr-sub">Before meals as prescribed</div></div>
+                <div class="toggle"></div>
+              </div>
+              <div class="toggle-row">
+                <div><div class="tr-label">Weight Check Reminder</div><div class="tr-sub">On dialysis mornings</div></div>
+                <div class="toggle off"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════ SUB: WHATSAPP ════════ -->
+        <div class="screen sub" id="s-whatsapp">
+          <div class="back-header">
+            <div class="back-btn" onclick="navigate('s-profile')">←</div>
+            <div><div class="bh-title">WhatsApp Alerts</div><div class="bh-sub">Manage WhatsApp notifications</div></div>
+          </div>
+          <div class="sub-body">
+            <div style="background:var(--mint-pale);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+              <span style="font-size:1.5rem;">✅</span>
+              <div><div style="font-size:.78rem;font-weight:800;color:var(--mint-d);">WhatsApp Connected</div><div style="font-size:.65rem;color:var(--g600);margin-top:2px;">+91 98765 43210 is active</div></div>
+            </div>
+            <div class="sub-card">
+              <div class="sub-section-title">Alert Preferences</div>
+              <div class="toggle-row">
+                <div><div class="tr-label">Daily Nutrition Summary</div><div class="tr-sub">Sent every evening at 9 PM</div></div>
+                <div class="toggle"></div>
+              </div>
+              <div class="toggle-row">
+                <div><div class="tr-label">Meal Plan for the Day</div><div class="tr-sub">Sent every morning at 7 AM</div></div>
+                <div class="toggle"></div>
+              </div>
+              <div class="toggle-row">
+                <div><div class="tr-label">Nutrient Exceeded Alert</div><div class="tr-sub">Immediate alert on crossing limit</div></div>
+                <div class="toggle"></div>
+              </div>
+              <div class="toggle-row">
+                <div><div class="tr-label">Dialysis Day Reminder</div><div class="tr-sub">Day before &amp; morning of session</div></div>
+                <div class="toggle"></div>
+              </div>
+              <div class="toggle-row">
+                <div><div class="tr-label">Coach Messages</div><div class="tr-sub">Tips from your health coach</div></div>
+                <div class="toggle off"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /screens -->
+
+      <!-- BOTTOM NAV -->
+      <div class="bottom-nav" id="mainNav">
+        <div class="nav-item" onclick="navigate('s-home')">
+          <div class="nav-icon">🏠</div><div class="nav-label">Home</div>
+        </div>
+        <div class="nav-item" onclick="navigate('s-nutrients')">
+          <div class="nav-icon">📊</div><div class="nav-label">Nutrients</div>
+        </div>
+        <div class="nav-item" onclick="navigate('s-meals')">
+          <div class="nav-icon">🥗</div><div class="nav-label">Meals</div>
+        </div>
+        <div class="nav-item" onclick="navigate('s-health')">
+          <div class="nav-icon">❤️</div><div class="nav-label">Health</div>
+        </div>
+        <div class="nav-item" onclick="navigate('s-game')">
+          <div class="nav-icon">🏆</div><div class="nav-label">Progress</div>
+        </div>
+        <div class="nav-item" onclick="navigate('s-foodlog')">
+          <div class="nav-icon">➕</div><div class="nav-label">Log</div>
+        </div>
+        <div class="nav-item" onclick="navigate('s-profile')">
+          <div class="nav-icon">👤</div><div class="nav-label">Profile</div>
+        </div>
+      </div>
+
+    </div><!-- /screen-area -->
+  </div><!-- /phone-shell -->
+
+  <div class="demo-sub" style="margin-top:2px;">Tap bottom icons · Login → OTP → App</div>
+</div>
+
+<script>
+// Screens that hide bottom nav
+const noNav = ['s-login','s-otp'];
+// Screens with dark/white status bar
+const darkSB = ['s-home','s-nutrients','s-meals','s-health','s-addfood','s-nutrient-limits','s-medical-profile','s-medications','s-notifications','s-whatsapp'];
+// Nav index map
+const navMap = {'s-home':0,'s-nutrients':1,'s-meals':2,'s-health':3,'s-game':4,'s-foodlog':5,'s-profile':6};
+// Sub-screens belong to which nav item
+const subParent = {'s-addfood':'s-foodlog','s-nutrient-limits':'s-profile','s-medical-profile':'s-profile','s-medications':'s-profile','s-notifications':'s-profile','s-whatsapp':'s-profile'};
+
+const sb = document.getElementById('statusBar');
+const mainNav = document.getElementById('mainNav');
+
+function showOnly(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  el.scrollTop = 0;
+  // nav visibility
+  mainNav.style.display = noNav.includes(id) ? 'none' : 'flex';
+  // status bar color
+  sb.style.color = (darkSB.includes(id)||id==='s-game'||noNav.includes(id)) ? '#fff' : 'var(--navy)';
+  // highlight nav
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const parentId = subParent[id] || id;
+  const idx = navMap[parentId];
+  if(idx !== undefined) document.querySelectorAll('.nav-item')[idx].classList.add('active');
+}
+
+function navigate(id){ showOnly(id); }
+
+// ── OTP LOGIC ──
+let otpVal = '';
+function goOTP(){
+  const ph = document.getElementById('phoneInput').value || '98765 43210';
+  document.getElementById('otpPhone').textContent = '+91 ' + ph;
+  otpVal = '';
+  updateOTPBoxes();
+  showOnly('s-otp');
+}
+function otpKey(k){
+  if(otpVal.length < 4){ otpVal += k; updateOTPBoxes(); }
+}
+function otpDel(){
+  otpVal = otpVal.slice(0,-1); updateOTPBoxes();
+}
+function updateOTPBoxes(){
+  for(let i=0;i<4;i++){
+    const box = document.getElementById('ob'+i);
+    box.textContent = otpVal[i] || '';
+    box.className = 'otp-box';
+    if(i < otpVal.length) box.classList.add('filled');
+    else if(i === otpVal.length) box.classList.add('active-box');
+  }
+}
+function verifyOTP(){
+  if(otpVal.length < 4){ alert('Please enter the 4-digit OTP'); return; }
+  showOnly('s-home');
+}
+function doLogout(){
+  otpVal=''; updateOTPBoxes();
+  showOnly('s-login');
+}
+
+// ══════════════════════════════════════════
+// WEEKLY MEAL PLAN DATA  (7 days)
+// ══════════════════════════════════════════
+const weekMeals = [
+  // 0 — Monday
+  {
+    breakfast:{ kcal:310, items:[
+      {name:'Idli (2 small, no salt)',tag:'ok',label:'✓ Low Na'},
+      {name:'Sambar (low-sodium, ½ cup)',tag:'ok',label:'✓ Safe'},
+      {name:'Coconut chutney (1 tbsp)',tag:'ok',label:'✓ Low K'},
+      {name:'Black tea (no milk)',tag:'ok',label:'✓ Low P'},
+    ]},
+    lunch:{ kcal:460, items:[
+      {name:'Steamed rice (1 cup)',tag:'ok',label:'✓ Safe'},
+      {name:'Fish curry (low-sodium, 80g)',tag:'ok',label:'✓ Protein'},
+      {name:'Boiled ash gourd sabzi',tag:'ok',label:'✓ Low K'},
+      {name:'Plain water (150mL)',tag:'ok',label:'✓ Fluid'},
+    ]},
+    dinner:{ kcal:380, items:[
+      {name:'Chapati (2 small, no salt)',tag:'na',label:'⚠ Na watch'},
+      {name:'Moong dal (½ cup)',tag:'ok',label:'✓ Low K'},
+      {name:'Ridge gourd sabzi',tag:'ok',label:'✓ Safe'},
+    ]},
+  },
+  // 1 — Tuesday
+  {
+    breakfast:{ kcal:295, items:[
+      {name:'Upma (rava, no salt)',tag:'na',label:'⚠ Na watch'},
+      {name:'Boiled egg white (2)',tag:'ok',label:'✓ Protein'},
+      {name:'Pear, small',tag:'ok',label:'✓ Low K'},
+      {name:'Black coffee (no milk)',tag:'ok',label:'✓ Low P'},
+    ]},
+    lunch:{ kcal:490, items:[
+      {name:'Plain rice (1 cup)',tag:'ok',label:'✓ Safe'},
+      {name:'Grilled chicken (100g)',tag:'ok',label:'✓ Protein'},
+      {name:'Boiled cabbage (½ cup)',tag:'ok',label:'✓ Low K'},
+      {name:'Cucumber salad (no salt)',tag:'ok',label:'✓ Low Na'},
+    ]},
+    dinner:{ kcal:370, items:[
+      {name:'Chapati (2 small)',tag:'na',label:'⚠ Na watch'},
+      {name:'Bottle gourd dal',tag:'ok',label:'✓ Low K'},
+      {name:'Roasted cauliflower',tag:'ok',label:'✓ Safe'},
+    ]},
+  },
+  // 2 — Wednesday
+  {
+    breakfast:{ kcal:330, items:[
+      {name:'Oats porridge (unsalted, ½ cup)',tag:'ok',label:'✓ Safe'},
+      {name:'Egg white omelette (2 whites)',tag:'ok',label:'✓ Protein'},
+      {name:'Apple, small',tag:'ok',label:'✓ Low K'},
+      {name:'Black tea (no milk)',tag:'ok',label:'✓ Low P'},
+    ]},
+    lunch:{ kcal:470, items:[
+      {name:'Steamed rice (1 cup)',tag:'ok',label:'✓ Safe'},
+      {name:'Egg curry (2 whole eggs)',tag:'ok',label:'✓ Protein'},
+      {name:'Boiled lauki (bottle gourd)',tag:'ok',label:'✓ Low K'},
+      {name:'Plain water (150mL)',tag:'ok',label:'✓ Fluid'},
+    ]},
+    dinner:{ kcal:360, items:[
+      {name:'White bread (2 slices, toasted)',tag:'ok',label:'✓ Low K'},
+      {name:'Low-sodium dal soup',tag:'ok',label:'✓ Safe'},
+      {name:'Steamed beans (¼ cup)',tag:'k',label:'⚠ K watch'},
+    ]},
+  },
+  // 3 — Thursday  (dialysis day)
+  {
+    breakfast:{ kcal:280, items:[
+      {name:'Semolina porridge (unsalted)',tag:'ok',label:'✓ Low K'},
+      {name:'Boiled egg white (2)',tag:'ok',label:'✓ Protein'},
+      {name:'Watermelon (small slice)',tag:'ok',label:'✓ Low Na'},
+      {name:'Black tea (no milk)',tag:'ok',label:'✓ Safe'},
+    ]},
+    lunch:{ kcal:420, items:[
+      {name:'Plain rice (¾ cup — dialysis day)',tag:'ok',label:'✓ Safe'},
+      {name:'Grilled fish (80g)',tag:'ok',label:'✓ Protein'},
+      {name:'Boiled zucchini',tag:'ok',label:'✓ Low K'},
+      {name:'Water (100mL — restrict)',tag:'ok',label:'✓ Fluid limit'},
+    ]},
+    dinner:{ kcal:340, items:[
+      {name:'Chapati (1 small)',tag:'ok',label:'✓ Low Na'},
+      {name:'Moong dal (low K, ½ cup)',tag:'ok',label:'✓ Low K'},
+      {name:'Stir-fried cabbage',tag:'ok',label:'✓ Safe'},
+    ]},
+  },
+  // 4 — Friday
+  {
+    breakfast:{ kcal:315, items:[
+      {name:'White bread toast (2 slices)',tag:'ok',label:'✓ Low K'},
+      {name:'Peanut butter (1 tsp, unsalted)',tag:'p',label:'⚠ P watch'},
+      {name:'Grapes (10 small)',tag:'ok',label:'✓ Low K'},
+      {name:'Black coffee (no milk)',tag:'ok',label:'✓ Low P'},
+    ]},
+    lunch:{ kcal:500, items:[
+      {name:'Steamed rice (1 cup)',tag:'ok',label:'✓ Safe'},
+      {name:'Chicken curry (100g, low Na)',tag:'ok',label:'✓ Protein'},
+      {name:'Boiled cauliflower',tag:'ok',label:'✓ Low K'},
+      {name:'Plain water (150mL)',tag:'ok',label:'✓ Fluid'},
+    ]},
+    dinner:{ kcal:375, items:[
+      {name:'Chapati (2 small, no salt)',tag:'na',label:'⚠ Na watch'},
+      {name:'Toor dal (½ cup)',tag:'ok',label:'✓ Safe'},
+      {name:'Ridge gourd sabzi',tag:'ok',label:'✓ Low K'},
+    ]},
+  },
+  // 5 — Saturday  (today, active)
+  {
+    breakfast:{ kcal:320, items:[
+      {name:'Egg white omelette (2 whites)',tag:'ok',label:'✓ Protein'},
+      {name:'White bread toast (1 slice)',tag:'ok',label:'✓ Low K'},
+      {name:'Apple, small',tag:'ok',label:'✓ Safe'},
+      {name:'Black coffee (no milk)',tag:'ok',label:'✓ Low P'},
+    ]},
+    lunch:{ kcal:480, items:[
+      {name:'Steamed rice (1 cup)',tag:'ok',label:'✓ Safe'},
+      {name:'Grilled chicken (100g)',tag:'ok',label:'✓ Protein'},
+      {name:'Boiled cabbage',tag:'ok',label:'✓ Low K'},
+      {name:'Plain water (150mL)',tag:'ok',label:'✓ Fluid'},
+    ]},
+    dinner:{ kcal:390, items:[
+      {name:'Chapati (2 small, no salt)',tag:'na',label:'⚠ Na watch'},
+      {name:'Low-sodium dal (½ cup)',tag:'ok',label:'✓ Safe'},
+      {name:'Bottle gourd sabzi',tag:'ok',label:'✓ Low K'},
+    ]},
+  },
+  // 6 — Sunday
+  {
+    breakfast:{ kcal:345, items:[
+      {name:'Dosa (1 plain, no filling)',tag:'ok',label:'✓ Low K'},
+      {name:'Coconut chutney (1 tbsp)',tag:'ok',label:'✓ Low Na'},
+      {name:'Boiled egg white (2)',tag:'ok',label:'✓ Protein'},
+      {name:'Black tea (no milk)',tag:'ok',label:'✓ Safe'},
+    ]},
+    lunch:{ kcal:455, items:[
+      {name:'Plain rice (1 cup)',tag:'ok',label:'✓ Safe'},
+      {name:'Steamed fish (100g)',tag:'ok',label:'✓ Protein'},
+      {name:'Boiled pumpkin (½ cup)',tag:'ok',label:'✓ Low K'},
+      {name:'Rasam (low-sodium, ½ cup)',tag:'ok',label:'✓ Fluid'},
+    ]},
+    dinner:{ kcal:360, items:[
+      {name:'Chapati (2 small, no salt)',tag:'na',label:'⚠ Na watch'},
+      {name:'Masoor dal (low K, ½ cup)',tag:'ok',label:'✓ Low K'},
+      {name:'Stir-fried lauki',tag:'ok',label:'✓ Safe'},
+    ]},
+  },
+];
+
+function tagClass(t){
+  if(t==='ok') return 'tag-ok';
+  if(t==='k')  return 'tag-k';
+  if(t==='p')  return 'tag-p';
+  if(t==='na') return 'tag-na';
+  return 'tag-ok';
+}
+
+function renderMeals(dayIdx){
+  const d = weekMeals[dayIdx];
+  const meals = [
+    {ico:'🌅', title:'Breakfast', time:'7:30 AM', data:d.breakfast},
+    {ico:'☀️',  title:'Lunch',     time:'1:00 PM', data:d.lunch},
+    {ico:'🌙', title:'Dinner',    time:'7:30 PM', data:d.dinner},
+  ];
+  const container = document.getElementById('mealPlanContent');
+  container.innerHTML = meals.map(m=>`
+    <div class="meal-block">
+      <div class="mb-head">
+        <span class="mb-head-ico">${m.ico}</span>
+        <span class="mb-head-title">${m.title}</span>
+        <span class="mb-head-time">${m.time}</span>
+        <span class="mb-head-kcal">${m.data.kcal} kcal</span>
+      </div>
+      <div class="mb-items">
+        ${m.data.items.map(it=>`
+          <div class="mb-item">
+            <span class="mbi-name">${it.name}</span>
+            <div class="mbi-tags"><span class="tag ${tagClass(it.tag)}">${it.label}</span></div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+let currentDayIdx = 5;
+function setDay(el, idx){
+  document.querySelectorAll('.day-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  currentDayIdx = idx;
+  renderMeals(idx);
+}
+
+// ══════════════════════════════════════════
+// ADD FOOD — CATEGORY DATA
+// ══════════════════════════════════════════
+const addedItems = new Set();
+const foodDB = {
+  Grains:[
+    {id:'f-rice',   ico:'🍚', bg:'var(--amber-pale)', name:'Steamed Rice (1 cup)',           p:'4.3g',  k:'55mg',  na:'2mg',   kcal:206, tag:'ok',  label:'✓ Safe'},
+    {id:'f-bread',  ico:'🍞', bg:'var(--amber-pale)', name:'White Bread (1 slice)',           p:'2.3g',  k:'36mg',  na:'130mg', kcal:79,  tag:'na',  label:'⚠ Na'},
+    {id:'f-oats',   ico:'🥣', bg:'var(--amber-pale)', name:'Oats Porridge (½ cup, unsalted)', p:'3.0g',  k:'80mg',  na:'5mg',   kcal:74,  tag:'ok',  label:'✓ Low K'},
+    {id:'f-rava',   ico:'🫕', bg:'var(--amber-pale)', name:'Rava / Semolina (½ cup)',         p:'2.5g',  k:'45mg',  na:'2mg',   kcal:120, tag:'ok',  label:'✓ Safe'},
+    {id:'f-idli',   ico:'🫓', bg:'var(--amber-pale)', name:'Idli (2 small, no salt)',          p:'3.8g',  k:'60mg',  na:'8mg',   kcal:114, tag:'ok',  label:'✓ Low Na'},
+    {id:'f-dosa',   ico:'🫓', bg:'var(--amber-pale)', name:'Plain Dosa (1 medium)',            p:'2.6g',  k:'55mg',  na:'12mg',  kcal:112, tag:'ok',  label:'✓ Safe'},
+    {id:'f-chapati',ico:'🫓', bg:'var(--amber-pale)', name:'Chapati (1 small, no salt)',       p:'3.1g',  k:'52mg',  na:'5mg',   kcal:104, tag:'ok',  label:'✓ Low Na'},
+  ],
+  Proteins:[
+    {id:'f-chicken',ico:'🍗', bg:'var(--mint-pale)',  name:'Grilled Chicken (100g)',          p:'31g',   k:'256mg', na:'74mg',  kcal:165, tag:'ok',  label:'✓ Protein'},
+    {id:'f-egg',    ico:'🥚', bg:'var(--mint-pale)',  name:'Egg Whites (2 whites)',            p:'7.2g',  k:'108mg', na:'110mg', kcal:34,  tag:'ok',  label:'✓ Low K'},
+    {id:'f-fish',   ico:'🐟', bg:'var(--mint-pale)',  name:'Steamed Fish (80g)',              p:'22g',   k:'220mg', na:'60mg',  kcal:118, tag:'ok',  label:'✓ Protein'},
+    {id:'f-tofu',   ico:'🧈', bg:'var(--mint-pale)',  name:'Tofu, firm (80g)',                p:'8.4g',  k:'130mg', na:'10mg',  kcal:72,  tag:'ok',  label:'✓ Low Na'},
+    {id:'f-dal-m',  ico:'🫘', bg:'var(--mint-pale)',  name:'Moong Dal cooked (½ cup)',        p:'7.0g',  k:'190mg', na:'4mg',   kcal:104, tag:'ok',  label:'✓ Low K'},
+    {id:'f-dal-t',  ico:'🫘', bg:'var(--mint-pale)',  name:'Toor Dal cooked (½ cup)',         p:'8.0g',  k:'240mg', na:'5mg',   kcal:116, tag:'k',   label:'⚠ K watch'},
+    {id:'f-milk',   ico:'🥛', bg:'var(--mint-pale)',  name:'Low-fat Milk (100mL limit)',      p:'3.4g',  k:'150mg', na:'40mg',  kcal:42,  tag:'p',   label:'⚠ P watch'},
+  ],
+  Vegetables:[
+    {id:'f-cab',    ico:'🥬', bg:'#f0ebf8',           name:'Boiled Cabbage (½ cup)',          p:'1.1g',  k:'150mg', na:'8mg',   kcal:17,  tag:'ok',  label:'✓ Low K'},
+    {id:'f-lauki',  ico:'🥒', bg:'#f0ebf8',           name:'Bottle Gourd / Lauki (½ cup)',    p:'0.6g',  k:'120mg', na:'2mg',   kcal:12,  tag:'ok',  label:'✓ Low K'},
+    {id:'f-caulifl',ico:'🥦', bg:'#f0ebf8',           name:'Boiled Cauliflower (½ cup)',      p:'1.0g',  k:'88mg',  na:'16mg',  kcal:14,  tag:'ok',  label:'✓ Safe'},
+    {id:'f-pumpkin',ico:'🎃', bg:'#f0ebf8',           name:'Boiled Pumpkin (½ cup)',          p:'0.7g',  k:'182mg', na:'1mg',   kcal:24,  tag:'ok',  label:'✓ Low Na'},
+    {id:'f-ridgeg', ico:'🌿', bg:'#f0ebf8',           name:'Ridge Gourd Sabzi (½ cup)',       p:'0.4g',  k:'100mg', na:'3mg',   kcal:18,  tag:'ok',  label:'✓ Low K'},
+    {id:'f-zucch',  ico:'🥒', bg:'#f0ebf8',           name:'Boiled Zucchini (½ cup)',         p:'0.8g',  k:'195mg', na:'9mg',   kcal:14,  tag:'ok',  label:'✓ Safe'},
+    {id:'f-ashg',   ico:'🌿', bg:'#f0ebf8',           name:'Ash Gourd / White Pumpkin (½ cup)',p:'0.4g', k:'75mg',  na:'2mg',   kcal:13,  tag:'ok',  label:'✓ Very Low K'},
+    {id:'f-beans',  ico:'🫛', bg:'#f0ebf8',           name:'French Beans boiled (¼ cup)',     p:'0.9g',  k:'180mg', na:'3mg',   kcal:16,  tag:'k',   label:'⚠ K watch'},
+  ],
+  Fruits:[
+    {id:'f-apple',  ico:'🍎', bg:'var(--teal-pale)',  name:'Apple, small (120g)',             p:'0.3g',  k:'107mg', na:'1mg',   kcal:62,  tag:'ok',  label:'✓ Safe'},
+    {id:'f-pear',   ico:'🍐', bg:'var(--teal-pale)',  name:'Pear, small (120g)',              p:'0.4g',  k:'116mg', na:'1mg',   kcal:61,  tag:'ok',  label:'✓ Low K'},
+    {id:'f-grapes', ico:'🍇', bg:'var(--teal-pale)',  name:'Grapes, green (10 pieces)',       p:'0.3g',  k:'90mg',  na:'2mg',   kcal:34,  tag:'ok',  label:'✓ Low K'},
+    {id:'f-water',  ico:'🍉', bg:'var(--teal-pale)',  name:'Watermelon (1 small slice)',      p:'0.6g',  k:'112mg', na:'2mg',   kcal:30,  tag:'ok',  label:'✓ Low Na'},
+    {id:'f-papaya', ico:'🍈', bg:'var(--teal-pale)',  name:'Papaya (½ cup diced)',            p:'0.5g',  k:'182mg', na:'8mg',   kcal:27,  tag:'ok',  label:'✓ Safe'},
+    {id:'f-plum',   ico:'🫐', bg:'var(--teal-pale)',  name:'Plum (1 medium)',                 p:'0.5g',  k:'104mg', na:'0mg',   kcal:30,  tag:'ok',  label:'✓ Low K'},
+    {id:'f-banana', ico:'🍌', bg:'var(--teal-pale)',  name:'Banana (AVOID — high K)',         p:'1.1g',  k:'422mg', na:'1mg',   kcal:89,  tag:'k',   label:'✕ High K'},
+  ],
+  Fluids:[
+    {id:'f-water-pl',ico:'💧',bg:'var(--teal-pale)', name:'Plain Water (100mL)',             p:'0g',    k:'0mg',   na:'0mg',   kcal:0,   tag:'ok',  label:'✓ Safe'},
+    {id:'f-tea',    ico:'🍵', bg:'var(--teal-pale)',  name:'Black Tea, no milk (150mL)',      p:'0g',    k:'40mg',  na:'5mg',   kcal:2,   tag:'ok',  label:'✓ Low K'},
+    {id:'f-coffee', ico:'☕', bg:'var(--teal-pale)',  name:'Black Coffee, no milk (100mL)',   p:'0.3g',  k:'49mg',  na:'2mg',   kcal:5,   tag:'ok',  label:'✓ Low P'},
+    {id:'f-rasam',  ico:'🍲', bg:'var(--teal-pale)',  name:'Low-sodium Rasam (½ cup)',        p:'0.5g',  k:'80mg',  na:'30mg',  kcal:15,  tag:'ok',  label:'✓ Low Na'},
+    {id:'f-cocow',  ico:'🥥', bg:'var(--teal-pale)',  name:'Coconut Water (limit: 100mL)',    p:'0.7g',  k:'250mg', na:'105mg', kcal:19,  tag:'k',   label:'⚠ K watch'},
+    {id:'f-juicapple',ico:'🧃',bg:'var(--teal-pale)',name:'Apple Juice, unsweetened (100mL)',p:'0.1g',  k:'101mg', na:'5mg',   kcal:45,  tag:'ok',  label:'✓ Safe'},
+  ],
+};
+
+// Build "All" list
+const allFoods = Object.values(foodDB).flat();
+
+let activeCat = 'All';
+
+function selectCat(el, cat){
+  document.querySelectorAll('.af-cat').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  activeCat = cat;
+  document.getElementById('afSearchInput').value = '';
+  renderFoodList();
+}
+
+function filterFoods(){
+  renderFoodList();
+}
+
+function renderFoodList(){
+  const q = (document.getElementById('afSearchInput').value || '').toLowerCase();
+  const src = activeCat === 'All' ? allFoods : (foodDB[activeCat] || []);
+  const filtered = q ? src.filter(f=>f.name.toLowerCase().includes(q)) : src;
+
+  const titleEl = document.getElementById('afResultsTitle');
+  titleEl.textContent = activeCat === 'All'
+    ? (q ? `Results for "${q}"` : 'All Kidney-Safe Foods')
+    : (q ? `${activeCat} — "${q}"` : `${activeCat}`);
+
+  const list = document.getElementById('afFoodList');
+  if(!filtered.length){
+    list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--g400);font-size:.78rem;">No items found</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(f=>{
+    const isAdded = addedItems.has(f.id);
+    return `<div class="af-food-item">
+      <div class="af-fi-ico" style="background:${f.bg}">${f.ico}</div>
+      <div style="flex:1">
+        <div class="af-fi-name">${f.name}</div>
+        <div class="af-fi-macros">
+          <span class="af-fi-macro">P: ${f.p}</span>
+          <span class="af-fi-macro">K: ${f.k}</span>
+          <span class="af-fi-macro">Na: ${f.na}</span>
+          <span class="af-fi-macro">${f.kcal} kcal</span>
+        </div>
+      </div>
+      <span class="tag ${tagClass(f.tag)}" style="margin-right:8px;white-space:nowrap">${f.label}</span>
+      <div class="af-fi-add${isAdded?' added':''}" onclick="markAdded('${f.id}',this)">${isAdded?'✓':'+'}</div>
+    </div>`;
+  }).join('');
+}
+
+function markAdded(id, el){
+  if(!addedItems.has(id)){
+    addedItems.add(id);
+    el.classList.add('added');
+    el.textContent = '✓';
+  }
+}
+
+// ── Meal type tabs (food log screen) ──
+document.querySelectorAll('.mt-tab').forEach(tab=>{
+  tab.addEventListener('click',function(){
+    document.querySelectorAll('.mt-tab').forEach(t=>t.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// ── Toggle switches ──
+document.querySelectorAll('.toggle').forEach(t=>{
+  t.addEventListener('click',function(){ this.classList.toggle('off'); });
+});
+
+// ── INIT ──
+renderMeals(5);          // Saturday default
+renderFoodList();        // All foods default
+mainNav.style.display = 'none'; // hide nav on login
+</script>
+</body>
+</html>
